@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diorite – Smarter Stock Predictions</title>
+  <meta name="description" content="Diorite is a next-generation stock forecasting system powered by IBM’s TinyTimeMixers model, blending historical data with real-world events for smarter predictions." />
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-alt: #070b1f;
+      --accent: #4f46e5;
+      --accent-soft: rgba(79, 70, 229, 0.12);
+      --accent-strong: #22c55e;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border-subtle: rgba(148, 163, 184, 0.3);
+      --card-bg: rgba(15, 23, 42, 0.9);
+      --danger: #f97373;
+
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.65);
+      --shadow-card: 0 18px 40px rgba(15, 23, 42, 0.75);
+
+      --transition-fast: 0.18s ease-out;
+      --transition-med: 0.24s ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 52%, #000 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    .page-shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 20px 64px;
+    }
+
+    /* Top nav */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(12, 10, 31, 0.96));
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 16px;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 25% 0, #a5b4fc, #4f46e5 40%, #0f172a 80%);
+      border: 1px solid rgba(129, 140, 248, 0.9);
+      box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 0.8),
+        0 12px 26px rgba(15, 23, 42, 0.85);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-logo::after {
+      content: "";
+      position: absolute;
+      inset: 36% 18% auto auto;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+      opacity: 0.75;
+    }
+
+    .brand-name {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .beta-pill {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(22, 163, 74, 0.2);
+      color: #bbf7d0;
+      border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .nav-main {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .nav-link {
+      position: relative;
+      padding: 4px 0;
+      cursor: pointer;
+      transition: color var(--transition-fast);
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -4px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #4f46e5, #22c55e);
+      transform-origin: center;
+      transform: scaleX(0);
+      opacity: 0;
+      transition: transform var(--transition-fast), opacity var(--transition-fast);
+    }
+
+    .nav-link:hover {
+      color: #e5e7eb;
+    }
+
+    .nav-link:hover::after {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(79, 70, 229, 0.7);
+      background: radial-gradient(circle at 0 0, rgba(79, 70, 229, 0.4), transparent 58%);
+      color: #e5e7eb;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background var(--transition-fast), transform var(--transition-fast),
+        box-shadow var(--transition-fast), border-color var(--transition-fast);
+      box-shadow: 0 12px 25px rgba(15, 23, 42, 0.8);
+    }
+
+    .nav-cta span.dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.2);
+    }
+
+    .nav-cta:hover {
+      background: radial-gradient(circle at 0 0, rgba(79, 70, 229, 0.7), transparent 62%);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.9);
+      border-color: rgba(129, 140, 248, 0.9);
+    }
+
+    .auth-links {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+    }
+
+    .auth-text-btn {
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 0;
+      transition: color var(--transition-fast);
+    }
+
+    .auth-text-btn:hover {
+      color: #e5e7eb;
+    }
+
+    .auth-outline-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      transition: background var(--transition-fast), border-color var(--transition-fast),
+        transform var(--transition-fast);
+    }
+
+    .auth-outline-btn:hover {
+      background: rgba(31, 41, 55, 0.95);
+      border-color: rgba(148, 163, 184, 0.9);
+      transform: translateY(-1px);
+    }
+
+    /* Hero */
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr);
+      gap: 34px;
+      margin-top: 40px;
+      align-items: center;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .hero-tagline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      width: max-content;
+    }
+
+    .hero-tag-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow:
+        0 0 0 4px rgba(34, 197, 94, 0.25),
+        0 0 18px rgba(34, 197, 94, 0.9);
+    }
+
+    .hero-title {
+      font-size: clamp(2.2rem, 3.1vw, 3.3rem);
+      font-weight: 650;
+      letter-spacing: -0.04em;
+      line-height: 1.08;
+    }
+
+    .hero-title span.accent {
+      background: linear-gradient(120deg, #a5b4fc, #4f46e5, #22c55e);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      max-width: 480px;
+    }
+
+    .hero-sub-points {
+      display: grid;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #d1d5db;
+    }
+
+    .hero-sub-points span.label {
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.72rem;
+    }
+
+    .hero-sub-points strong {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    /* Hero actions */
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(129, 140, 248, 0.8);
+      background: linear-gradient(135deg, #4f46e5, #22c55e);
+      color: #f9fafb;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow:
+        0 16px 40px rgba(15, 23, 42, 0.95),
+        0 0 40px rgba(79, 70, 229, 0.8);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+        filter var(--transition-fast);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow:
+        0 18px 45px rgba(15, 23, 42, 1),
+        0 0 50px rgba(79, 70, 229, 0.9);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.2), transparent 65%);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: background var(--transition-fast), border-color var(--transition-fast),
+        color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .btn-ghost:hover {
+      background: radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.26), transparent 70%);
+      border-color: rgba(156, 163, 175, 0.9);
+      color: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .btn-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(156, 163, 175, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    /* Trust / stats */
+    .hero-trust {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      align-items: center;
+    }
+
+    .trust-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .trust-pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.85);
+      font-size: 0.72rem;
+      color: #e5e7eb;
+    }
+
+    .stat-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 6px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.8rem;
+    }
+
+    .stat span.val {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #e5e7eb;
+    }
+
+    .stat span.tag {
+      color: #9ca3af;
+      font-size: 0.72rem;
+    }
+
+    /* Right visual */
+    .hero-right {
+      position: relative;
+    }
+
+    .hero-card {
+      position: relative;
+      border-radius: 26px;
+      padding: 18px;
+      background: radial-gradient(circle at top left, #0b1120, #020617 70%);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      min-height: 270px;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: -50% -40% auto auto;
+      background: radial-gradient(circle at 0 0, rgba(79, 70, 229, 0.3), transparent 65%);
+      opacity: 0.75;
+      pointer-events: none;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      z-index: 1;
+      position: relative;
+    }
+
+    .chart-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.8rem;
+    }
+
+    .chart-title-block span.label {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+
+    .chart-title-block span.main {
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chart-title-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.7);
+      background: rgba(8, 47, 73, 0.7);
+      font-size: 0.7rem;
+      color: #e0f2fe;
+    }
+
+    .tiny-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 0.7rem;
+      color: #cbd5f5;
+    }
+
+    .tiny-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #a5b4fc, #4f46e5);
+      box-shadow: 0 0 12px rgba(79, 70, 229, 0.9);
+    }
+
+    .chart-body {
+      position: relative;
+      margin-top: 4px;
+    }
+
+    .chart-grid {
+      height: 150px;
+      border-radius: 16px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background:
+        linear-gradient(to right, rgba(31, 41, 55, 0.8) 1px, transparent 1px) 0 0 / 14% 100% repeat-x,
+        linear-gradient(to top, rgba(31, 41, 55, 0.8) 1px, transparent 1px) 0 0 / 100% 25% repeat-y,
+        radial-gradient(circle at 0 0, rgba(79, 70, 229, 0.32), transparent 60%);
+      position: relative;
+      overflow: hidden;
+      padding: 6px 10px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .chart-line {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .chart-line svg {
+      width: 100%;
+      height: 100%;
+      opacity: 0.9;
+    }
+
+    .chart-tag {
+      position: absolute;
+      top: 10px;
+      left: 14px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      font-size: 0.7rem;
+      color: #9ca3af;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chart-tag span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+    }
+
+    .chart-bars {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 7px;
+      width: 100%;
+      height: 100%;
+      padding-top: 20px;
+      z-index: 1;
+    }
+
+    .chart-bar {
+      flex: 1;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.95), rgba(22, 163, 74, 0.05));
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-bar.alt {
+      background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(148, 163, 184, 0.1));
+      box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.9);
+    }
+
+    .chart-bar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(15, 23, 42, 0.1), transparent 40%);
+    }
+
+    .chart-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+    }
+
+    .legend-swatch.pred {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border-color: rgba(74, 222, 128, 0.9);
+    }
+
+    .legend-swatch.actual {
+      background: linear-gradient(135deg, #e5e7eb, #9ca3af);
+    }
+
+    .forecast-chip {
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(34, 197, 94, 0.8);
+      color: #bbf7d0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .forecast-chip span.badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+    }
+
+    /* Lower content */
+    .lower-section {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr);
+      gap: 26px;
+      align-items: flex-start;
+    }
+
+    .pill-heading {
+      font-size: 0.75rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .feature-card {
+      border-radius: var(--radius-md);
+      padding: 10px 11px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.86);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.9);
+      font-size: 0.82rem;
+    }
+
+    .feature-title {
+      font-size: 0.84rem;
+      margin-bottom: 4px;
+      color: #e5e7eb;
+    }
+
+    .feature-body {
+      color: #9ca3af;
+    }
+
+    .feature-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      color: #a5b4fc;
+      margin-bottom: 5px;
+    }
+
+    .feature-tag-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #a5b4fc, #4f46e5);
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.96);
+      font-size: 0.7rem;
+      color: #e5e7eb;
+      margin-top: 8px;
+    }
+
+    .pill-badge span.highlight {
+      color: #4ade80;
+    }
+
+    /* Right card (How it works) */
+    .how-card {
+      border-radius: var(--radius-lg);
+      padding: 14px 14px 16px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.96);
+      box-shadow: var(--shadow-card);
+    }
+
+    .how-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .how-title {
+      font-size: 0.95rem;
+      color: #e5e7eb;
+    }
+
+    .how-subtitle {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .how-steps {
+      margin-top: 4px;
+      display: grid;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: #d1d5db;
+    }
+
+    .step {
+      display: flex;
+      gap: 8px;
+    }
+
+    .step-index {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      color: #e5e7eb;
+      flex-shrink: 0;
+    }
+
+    .step-body strong {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .how-footer {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .badge-compare {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px dashed rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.94);
+    }
+
+    .badge-compare span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #facc15;
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.8);
+    }
+
+    .how-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #e5e7eb;
+    }
+
+    .how-cta span.icon {
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    .page-footer {
+      margin-top: 44px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .footer-link {
+      position: relative;
+      padding-bottom: 1px;
+      cursor: pointer;
+    }
+
+    .footer-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: rgba(148, 163, 184, 0.7);
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform var(--transition-fast);
+    }
+
+    .footer-link:hover::after {
+      transform: scaleX(1);
+    }
+
+    /* Auth modal */
+    .auth-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .auth-backdrop.is-open {
+      display: flex;
+    }
+
+    .auth-modal {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top, #020617, #020617 60%, #030712);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.95);
+      padding: 18px 18px 20px;
+      position: relative;
+      color: #e5e7eb;
+    }
+
+    .auth-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: #9ca3af;
+      transition: background var(--transition-fast), border-color var(--transition-fast),
+        transform var(--transition-fast), color var(--transition-fast);
+    }
+
+    .auth-close:hover {
+      background: rgba(31, 41, 55, 1);
+      border-color: rgba(148, 163, 184, 1);
+      color: #f9fafb;
+      transform: translateY(-1px);
+    }
+
+    .auth-tabs {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      margin-bottom: 10px;
+    }
+
+    .auth-tab {
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      font-size: 0.8rem;
+      padding: 5px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background var(--transition-fast), color var(--transition-fast),
+        transform var(--transition-fast);
+    }
+
+    .auth-tab.is-active {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.9), rgba(34, 197, 94, 0.9));
+      color: #f9fafb;
+      transform: translateY(-1px);
+    }
+
+    .auth-heading {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .auth-subheading {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 12px;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.8rem;
+    }
+
+    .auth-label {
+      color: #d1d5db;
+    }
+
+    .auth-input {
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      padding: 8px 9px;
+      color: #e5e7eb;
+      font-size: 0.8rem;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast),
+        background var(--transition-fast);
+    }
+
+    .auth-input:focus {
+      border-color: rgba(129, 140, 248, 1);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.6);
+      background: #020617;
+    }
+
+    .auth-extra-row {
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .auth-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .auth-submit {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(129, 140, 248, 0.85);
+      background: linear-gradient(135deg, #4f46e5, #22c55e);
+      color: #f9fafb;
+      font-size: 0.86rem;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 14px 40px rgba(15, 23, 42, 1);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+        filter var(--transition-fast);
+    }
+
+    .auth-submit:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: 0 18px 48px rgba(15, 23, 42, 1);
+    }
+
+    .auth-note {
+      margin-top: 6px;
+      font-size: 0.74rem;
+      color: #6b7280;
+    }
+
+    .auth-link-inline {
+      border: none;
+      background: none;
+      color: #a5b4fc;
+      cursor: pointer;
+      padding: 0;
+      font-size: 0.74rem;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .hero-right {
+        order: -1;
+      }
+
+      .top-nav {
+        padding-inline: 14px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .page-shell {
+        padding-inline: 16px;
+      }
+
+      .lower-section {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero-title {
+        font-size: 1.9rem;
+      }
+
+      .hero-card {
+        border-radius: 22px;
+      }
+
+      .features-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .page-shell {
+        padding-inline: 14px;
+      }
+
+      .auth-modal {
+        margin-inline: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <!-- Top Nav -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true"></div>
+        <div>
+          <div class="brand-name">Diorite</div>
+        </div>
+        <span class="beta-pill">Preview</span>
+      </div>
+
+      <div class="nav-main">
+        <nav class="nav-links" aria-label="Primary navigation">
+          <a href="#how-it-works" class="nav-link">How it works</a>
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#metrics" class="nav-link">Metrics</a>
+        </nav>
+
+        <div class="auth-links">
+          <button class="auth-outline-btn js-open-auth" data-mode="login" type="button">Log in</button>
+          <button class="auth-outline-btn js-open-auth" data-mode="signup" type="button">Sign up</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-left">
+          <div class="hero-tagline">
+            <span class="hero-tag-dot"></span>
+            <span>Event‑aware stock forecasting</span>
+          </div>
+
+          <h1 id="hero-title" class="hero-title">
+            Diorite — <span class="accent">Smarter Stock Predictions, Reinvented.</span>
+          </h1>
+
+          <p class="hero-subtitle">
+            Stay ahead of the market with Diorite’s next‑generation forecasting system powered by IBM’s TinyTimeMixers model. 
+            Unlike traditional tools that only rely on past prices, Diorite blends historical data with real‑world events—like earnings reports and breaking economic news—to reveal how today’s stories move tomorrow’s markets.
+          </p>
+
+          <div class="hero-sub-points">
+            <div>
+              <span class="label">Built for modern investors</span>
+            </div>
+            <div>
+              <strong>Faster, smarter, and more reliable</strong> short‑term signals designed to keep you in sync with volatility instead of reacting to it late.
+            </div>
+          </div>
+
+          <button class="btn-primary" data-mode="login" type="button">
+            <span>Try now</span>
+            <span class="btn-icon">↗</span>
+        </button>
+    </div>
+
+          <div class="hero-trust" id="metrics">
+            <div class="trust-label">
+              <div class="trust-pill">TinyTimeMixers‑powered engine</div>
+              <span>Multivariate, event‑aware forecasts in real time.</span>
+            </div>
+
+            <div class="stat-row">
+              <div class="stat">
+                <span class="val">5+ years</span>
+                <span class="tag">Historical + event data</span>
+              </div>
+              <div class="stat">
+                <span class="val">Minute‑level</span>
+                <span class="tag">Granularity for active traders</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right visual -->
+        <div class="hero-right" aria-hidden="true">
+          <div class="hero-card">
+            <div class="chart-header">
+              <div class="chart-title-block">
+                <span class="label">Live forecast</span>
+                <span class="main">
+                  Diorite Signal
+                  <span class="chart-title-pill">DBS • 15 min horizon</span>
+                </span>
+              </div>
+              <div class="tiny-badge">
+                <span class="tiny-dot"></span>
+                <span>IBM TinyTimeMixers</span>
+              </div>
+            </div>
+
+            <div class="chart-body">
+              <div class="chart-grid">
+                <div class="chart-line">
+                  <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="predLine" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#22c55e" />
+                        <stop offset="50%" stop-color="#4ade80" />
+                        <stop offset="100%" stop-color="#4f46e5" />
+                      </linearGradient>
+                    </defs>
+                    <polyline
+                      fill="none"
+                      stroke="url(#predLine)"
+                      stroke-width="1.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      points="0,28 10,26 20,24 30,22 40,23 50,20 60,18 70,16 80,19 90,15 100,13"
+                    />
+                  </svg>
+                </div>
+
+                <div class="chart-tag">
+                  <span class="dot"></span>
+                  <span>Event‑driven uplift +2.3%</span>
+                </div>
+
+                <div class="chart-bars">
+                  <div class="chart-bar" style="height: 48%;"></div>
+                  <div class="chart-bar" style="height: 56%;"></div>
+                  <div class="chart-bar alt" style="height: 40%;"></div>
+                  <div class="chart-bar" style="height: 64%;"></div>
+                  <div class="chart-bar alt" style="height: 46%;"></div>
+                  <div class="chart-bar" style="height: 70%;"></div>
+                  <div class="chart-bar alt" style="height: 52%;"></div>
+                </div>
+              </div>
+
+              <div class="chart-footer">
+                <div class="legend">
+                  <div class="legend-item">
+                    <span class="legend-swatch pred"></span>
+                    <span>Predicted path</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-swatch actual"></span>
+                    <span>Actual close</span>
+                  </div>
+                </div>
+                <div class="forecast-chip">
+                  <span class="badge-dot"></span>
+                  <span>RMSE vs ARIMA ↓ 18.4%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lower content -->
+      <section class="lower-section">
+        <div id="features">
+          <div class="pill-heading">Why Diorite</div>
+          <div class="features-grid">
+            <article class="feature-card">
+              <div class="feature-tag">
+                <span class="feature-tag-dot"></span>
+                <span>Event‑aware engine</span>
+              </div>
+              <h3 class="feature-title">From headlines to price moves</h3>
+              <p class="feature-body">
+                Diorite fuses price history with earnings, macro releases, and breaking news to anticipate how narratives ripple through short‑term price action instead of just reacting after the move.
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-tag">
+                <span class="feature-tag-dot"></span>
+                <span>Multivariate modeling</span>
+              </div>
+              <h3 class="feature-title">TinyTimeMixers under the hood</h3>
+              <p class="feature-body">
+                IBM’s TinyTimeMixers foundation model powers Diorite’s multivariate forecasts, capturing relationships across prices, volume, and event signals in a compact, efficient architecture.[web:13][web:16]
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-tag">
+                <span class="feature-tag-dot"></span>
+                <span>Built for volatility</span>
+              </div>
+              <h3 class="feature-title">Short‑term horizons that matter</h3>
+              <p class="feature-body">
+                Focus on the 15–60 minute windows where decisions are critical, with forecasts tuned for fast‑moving, high‑impact sessions instead of slow‑moving long‑only views.
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-tag">
+                <span class="feature-tag-dot"></span>
+                <span>Transparent signals</span>
+              </div>
+              <h3 class="feature-title">See what the model sees</h3>
+              <p class="feature-body">
+                Trace forecasts back to the events and features that moved the needle so you understand which stories, metrics, or anomalies are driving each change in the predicted path.
+              </p>
+            </article>
+          </div>
+
+          <div class="pill-badge">
+            <span>Coming soon:</span>
+            <span class="highlight">Portfolio‑level scenario testing and alerting.</span>
+          </div>
+        </div>
+
+        <aside class="how-card" id="how-it-works" aria-label="How Diorite works">
+          <div class="how-header">
+            <h2 class="how-title">How Diorite turns events into forecasts</h2>
+            <div class="tiny-badge">
+              <span class="tiny-dot"></span>
+              <span>TinyTimeMixers core</span>
+            </div>
+          </div>
+          <p class="how-subtitle">
+            A compact, multivariate forecasting stack that connects historical prices with real‑world signals using IBM’s TinyTimeMixers model.[web:13]
+          </p>
+
+          <ol class="how-steps">
+            <li class="step">
+              <div class="step-index">1</div>
+              <div class="step-body">
+                <strong>Ingest & align data.</strong>
+                Price history, volume, earnings calendars, and macro headlines are cleaned, normalized, and aligned on a shared time axis.
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-index">2</div>
+              <div class="step-body">
+                <strong>Encode real‑world events.</strong>
+                Surprises, sentiment, and magnitude are transformed into features the model can mix with raw market data.
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-index">3</div>
+              <div class="step-body">
+                <strong>Forecast with TinyTimeMixers.</strong>
+                A multivariate TinyTimeMixers backbone generates short‑horizon forecasts that adapt as new ticks and stories arrive.[web:13]
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-index">4</div>
+              <div class="step-body">
+                <strong>Benchmark & surface insights.</strong>
+                Diorite tracks error vs ARIMA and moving averages, then highlights where event‑aware signals outperform traditional baselines.
+              </div>
+            </li>
+          </ol>
+
+          <div class="how-footer">
+            <div class="badge-compare">
+              <span class="dot"></span>
+              <span>Designed to outperform ARIMA and moving‑average baselines on volatile sessions.</span>
+            </div>
+            <button class="how-cta" type="button">
+              <span class="icon">↗</span>
+              <span>View research notes</span>
+            </button>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <div>© 2026 Diorite. All rights reserved.</div>
+      <div class="footer-links">
+        <span class="footer-link">Security</span>
+        <span class="footer-link">Model card</span>
+        <span class="footer-link">Contact</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Auth modal -->
+  <div class="auth-backdrop" id="auth-backdrop" aria-modal="true" role="dialog" aria-hidden="true">
+    <div class="auth-modal">
+      <button class="auth-close" type="button" id="auth-close" aria-label="Close">
+        ✕
+      </button>
+
+      <div class="auth-tabs">
+        <button class="auth-tab is-active" type="button" data-mode="login">Log in</button>
+        <button class="auth-tab" type="button" data-mode="signup">Sign up</button>
+      </div>
+
+      <div id="auth-login-panel">
+        <h2 class="auth-heading">Welcome back</h2>
+        <p class="auth-subheading">Sign in to access Diorite’s live forecasts and dashboards.</p>
+
+        <form class="auth-form" id="login-form">
+          <div class="auth-field">
+            <label class="auth-label" for="login-email">Email</label>
+            <input class="auth-input" type="email" id="login-email" name="email" autocomplete="username" required />
+          </div>
+          <div class="auth-field">
+            <label class="auth-label" for="login-password">Password</label>
+            <input class="auth-input" type="password" id="login-password" name="password" autocomplete="current-password" required />
+          </div>
+
+          <div class="auth-extra-row">
+            <label class="auth-checkbox">
+              <input type="checkbox" />
+              <span>Remember me</span>
+            </label>
+            <button type="button" class="auth-link-inline">Forgot password?</button>
+          </div>
+
+          <button class="auth-submit" type="submit">Log in</button>
+
+          <p class="auth-note">
+            New to Diorite?
+            <button type="button" class="auth-link-inline js-switch-to-signup">Create an account</button>
+          </p>
+        </form>
+      </div>
+
+      <div id="auth-signup-panel" style="display:none;">
+        <h2 class="auth-heading">Create your Diorite account</h2>
+        <p class="auth-subheading">Sign up to try Diorite and get early access to new forecasting features.</p>
+
+        <form class="auth-form" id="signup-form">
+          <div class="auth-field">
+            <label class="auth-label" for="signup-name">Full name</label>
+            <input class="auth-input" type="text" id="signup-name" name="name" required />
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-label" for="signup-email">Work email</label>
+            <input class="auth-input" type="email" id="signup-email" name="email" autocomplete="email" required />
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-label" for="signup-password">Password</label>
+            <input class="auth-input" type="password" id="signup-password" name="password" autocomplete="new-password" required />
+          </div>
+
+          <div class="auth-extra-row">
+            <label class="auth-checkbox">
+              <input type="checkbox" required />
+              <span>I agree to the Terms & Privacy.</span>
+            </label>
+          </div>
+
+          <button class="auth-submit" type="submit">Sign up</button>
+
+          <p class="auth-note">
+            Already have an account?
+            <button type="button" class="auth-link-inline js-switch-to-login">Log in instead</button>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    // Placeholder actions for main CTAs
+document.querySelectorAll('.btn-primary').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    openAuth('login');  // Uses existing openAuth function
+  });
+});
+
+
+    // Auth modal JS
+    const authBackdrop = document.getElementById("auth-backdrop");
+    const authClose = document.getElementById("auth-close");
+    const authTabs = document.querySelectorAll(".auth-tab");
+    const loginPanel = document.getElementById("auth-login-panel");
+    const signupPanel = document.getElementById("auth-signup-panel");
+    const openAuthButtons = document.querySelectorAll(".js-open-auth");
+    const switchToSignup = document.querySelectorAll(".js-switch-to-signup");
+    const switchToLogin = document.querySelectorAll(".js-switch-to-login");
+
+    function openAuth(mode) {
+      authBackdrop.classList.add("is-open");
+      authBackdrop.setAttribute("aria-hidden", "false");
+      setAuthMode(mode || "login");
+    }
+
+    function closeAuth() {
+      authBackdrop.classList.remove("is-open");
+      authBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    function setAuthMode(mode) {
+      if (mode === "signup") {
+        loginPanel.style.display = "none";
+        signupPanel.style.display = "block";
+      } else {
+        loginPanel.style.display = "block";
+        signupPanel.style.display = "none";
+      }
+
+      authTabs.forEach(function (tab) {
+        if (tab.dataset.mode === mode) {
+          tab.classList.add("is-active");
+        } else {
+          tab.classList.remove("is-active");
+        }
+      });
+    }
+
+    openAuthButtons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const mode = btn.dataset.mode || "login";
+        openAuth(mode);
+      });
+    });
+
+    authClose.addEventListener("click", closeAuth);
+
+    authBackdrop.addEventListener("click", function (e) {
+      if (e.target === authBackdrop) {
+        closeAuth();
+      }
+    });
+
+    authTabs.forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        setAuthMode(tab.dataset.mode || "login");
+      });
+    });
+
+    switchToSignup.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        setAuthMode("signup");
+      });
+    });
+
+    switchToLogin.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        setAuthMode("login");
+      });
+    });
+
+    // Prevent real form submit for now
+    document.getElementById("login-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      alert("Login submit placeholder. Hook this to your backend or Firebase/Auth provider.");
+    });
+
+    document.getElementById("signup-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      alert("Signup submit placeholder. Hook this to your backend or Firebase/Auth provider.");
+    });
+
+    // Escape key to close modal
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        closeAuth();
+      }
+    });
+  </script>
+</body>
+</html>
